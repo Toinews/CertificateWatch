@@ -54,8 +54,15 @@ function showChangedValidity(validity, otherValidity, visualClass, parent) {
 }
 
 function showChangedSubject(subject, otherSubject, visualClass, parent) {
-	const sSplit = subject.match(new RegExp("[A-Z]+=([^,\"]+|\"[^\"]+\")", "g"));
-	const oSplit = otherSubject.match(new RegExp("[A-Z]+=([^,\"]+|\"[^\"]+\")", "g"));
+	let sSplit = subject.match(new RegExp("[A-Z]+=([^,\"]+|\"[^\"]+\")", "g"));
+	let oSplit = otherSubject.match(new RegExp("[A-Z]+=([^,\"]+|\"[^\"]+\")", "g"));
+
+	if (!sSplit) {
+		sSplit = ["NEW"];
+	}
+	if (!oSplit) {
+		oSplit = ["NEW"];
+	}
 
 	let comma;
 	for (const part of sSplit) {
@@ -248,6 +255,11 @@ async function init() {
 	const settingsLink = document.getElementById("settingsLink");
 	settingsLink.addEventListener("click", () => {
 		browser.runtime.openOptionsPage();
+	});
+
+	const refreshLink = document.getElementById("refreshLink");
+	refreshLink.addEventListener("click", () => {
+		browser.tabs.reload();
 	});
 
 	const storageLink = document.getElementById("storageLink");

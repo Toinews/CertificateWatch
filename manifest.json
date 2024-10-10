@@ -16,6 +16,7 @@
 	"background": {
 		"scripts": [
 			"cw_common.js",
+			"cw_cert_error.js",
 			"cw_background_data.js",
 			"cw_background_tabs.js",
 			"cw_background_connections.js"

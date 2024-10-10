@@ -111,6 +111,14 @@
 		"message": "Fingerabdruck",
 		"description": "The label for the checkbox to check fingerprint field for modifications"
 	},
+	"settingsUserApprovalRequiredTooltip": {
+		"message": "Fingerabdruck",
+		"description": "The label for the checkbox to require user approval to continue"
+	},
+	"settingsLblUserApprovalRequired": {
+		"message": "User Approval",
+		"description": "Button to block the connection."
+	},
 	"settingsSave": {
 		"message": "Speichern",
 		"description": "Button to save the modified settings."

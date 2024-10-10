@@ -31,6 +31,8 @@ const CW = bg.getCW();
 	const checkedFields = document.forms["checkedFields"].elements["checkedFields"];
 	const resetBtn = document.getElementById("reset");
 	const saveBtn = document.getElementById("save");
+	const userApprovalRequired = document.getElementById("userApprovalRequired")
+	const strictMode = document.getElementById("strictMode")
 
 	/*
 	 * A separate save button with a "click" event handler is required for
@@ -44,6 +46,8 @@ const CW = bg.getCW();
 		saveBtn.disabled = true;
 
 		certChecks.value = CW.getSetting("certChecks", "all");
+		userApprovalRequired.checked = CW.getSetting("userApprovalRequired", true);
+		strictMode.checked = CW.getSetting("strictMode", true);
 		logLevel.value = CW.getSetting("logLevel", "none");
 		ignoredDomains.value = CW.getSetting("ignoredDomains", []).join("\n");
 
@@ -64,6 +68,8 @@ const CW = bg.getCW();
 		saveBtn.disabled = true;
 
 		CW.setSetting("logLevel", logLevel.value);
+		CW.setSetting("userApprovalRequired", userApprovalRequired.checked);
+		CW.setSetting("strictMode", strictMode.checked);
 		CW.setSetting("ignoredDomains", ignoredDomains.value.split("\n"));
 
 		if (certChecks.value === "domain") {
@@ -115,6 +121,8 @@ const CW = bg.getCW();
 	saveBtn.addEventListener("click", save);
 
 	certChecks.addEventListener("change", modified);
+	userApprovalRequired.addEventListener("change", modified);
+	strictMode.addEventListener("change", modified);
 	logLevel.addEventListener("change", modified);
 	ignoredDomains.addEventListener("input", modified);
 	for (const field of checkedFields) {

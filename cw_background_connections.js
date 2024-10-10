@@ -48,6 +48,7 @@ function isIgnoredDomain(host, ignoredDomains) {
 }
 
 function analyzeCert(host, securityInfo, result) {
+	const strictMode = CW.getSetting("strictMode", true);
 	if (!securityInfo.certificates || securityInfo.certificates.length !== 1) {
 		result.status = CW.CERT_ERROR;
 		return;
@@ -57,9 +58,29 @@ function analyzeCert(host, securityInfo, result) {
 	const storedCert = CW.Certificate.fromStorage(host);
 
 	if (!storedCert) {
-		result.status = CW.CERT_TOFU;
-		cert.store(host);
-
+		if (!strictMode) {
+			result.status = CW.CERT_TOFU;
+			cert.store(host);
+		} else {
+			result.status = CW.CERT_NEW;
+			result.got = cert;
+			result.accepted = false;
+			result.changes = {};
+			result.stored = {
+				"subject": "NEW",
+				"issuer": "NEW",
+				"validity": "NEW",
+				"subjectPublicKeyInfoDigest": "NEW",
+				"serialNumber": "0",
+				"fingerprint": "0"
+			}
+			result.changes["subject"] = {stored: "NEW", got: cert["subject"]}
+			result.changes["issuer"] = {stored: "NEW", got: cert["issuer"]}
+			result.changes["validity"] = {stored: { "start": 0, "end": 0}, got: cert["validity"]}
+			result.changes["subjectPublicKeyInfoDigest"] = {stored: "NEW", got: cert["subjectPublicKeyInfoDigest"]}
+			result.changes["serialNumber"] = {stored: "0", got: cert["serialNumber"]}
+			result.changes["fingerprint"] = {stored: "0", got: cert["fingerprint"]}
+		}
 	} else {
 		const changes = {};
 		const checkedFields = CW.getSetting("checkedFields",
@@ -113,9 +134,9 @@ function analyzeCert(host, securityInfo, result) {
 	}
 }
 
-async function checkConnection(url, securityInfo, tabId) {
+async function checkConnection(url, securityInfo, tabId, cancel) {
 	if (CW.enabled === false || CW.storageInitialized === false) {
-		return;
+		cancel.flag = true;
 	}
 
 	let host;
@@ -149,7 +170,17 @@ async function checkConnection(url, securityInfo, tabId) {
 
 		if (securityInfo.state === "secure" || securityInfo.state === "weak") {
 			const result = new CW.CheckResult(host);
+			const strictMode = CW.getSetting("strictMode", true)
+			const userApprovalRequired = CW.getSetting("userApprovalRequired", true)
 			await analyzeCert(host, securityInfo, result);
+
+			if (strictMode && result.status === CW.CERT_NEW) {
+				result.status = CW.CERT_CHANGED;
+			}
+
+			if (result.status === CW.CERT_CHANGED && userApprovalRequired) {
+				cancel.flag = true;
+			}
 
 			CW.logDebug(host, result.status.text);
 
@@ -165,14 +196,21 @@ async function checkConnection(url, securityInfo, tabId) {
 		tab.addResult(new CW.CheckResult(host ? host : ""));
 		CW.updateTabIcon(tabId);
 	}
+	return;
 }
 
 async function onHeadersReceived(details) {
 	// only query securityInfo and then quickly return
 	// checkConnection() is executed async
 	// this makes blocking the request as short as possible
+	let cancel = {flag: false}
+
 	const securityInfo = await browser.webRequest.getSecurityInfo(details.requestId, {});
-	checkConnection(details.url, securityInfo, details.tabId);
+	await checkConnection(details.url, securityInfo, details.tabId, cancel);
+	if (cancel.flag === true) {
+		return {'cancel': true};
+	}
+	return;
 }
 
 browser.webRequest.onHeadersReceived.addListener(

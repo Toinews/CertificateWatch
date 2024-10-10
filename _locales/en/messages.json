@@ -111,6 +111,22 @@
 		"message": "Fingerprint",
 		"description": "The label for the checkbox to check fingerprint field for modifications"
 	},
+	"settingsUserApprovalRequiredTooltip": {
+		"message": "User approval switch\n If checked the connection to the distant site will be blocked until user accept the certificate.",
+		"description": "The label for the checkbox to require user approval to continue"
+	},
+	"settingsLblUserApprovalRequired": {
+		"message": "User Approval:",
+		"description": "Button to block the connection."
+	},
+	"settingsstrictModeTooltip": {
+		"message": "Strict mode wil generate a warning for every new certificate and will block th econneciton until the user approves the certificate.",
+		"description": "The label for the checkbox to enforce strict mode"
+	},
+	"settingsLblstrictMode": {
+		"message": "Strict Mode:",
+		"description": "Button to enforce strict mode."
+	},
 	"settingsSave": {
 		"message": "Save",
 		"description": "Button to save the modified settings."
@@ -197,6 +213,14 @@
 	},
 	"popupStorageTooltip": {
 		"message": "Show storage page",
+		"description": "The tooltip for the link in the pop-up to the storage page."
+	},
+	"popupRefresh": {
+		"message": "Refresh",
+		"description": "Refresh the current tab"
+	},
+	"popupRefreshTooltip": {
+		"message": "Refresh page",
 		"description": "The tooltip for the link in the pop-up to the storage page."
 	},
 	"popupChanged": {
