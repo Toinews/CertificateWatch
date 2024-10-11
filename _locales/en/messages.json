@@ -27,6 +27,10 @@
 		"message": "An internal error occured",
 		"description": "Tooltip shown when an internal error occured during certificate checking."
 	},
+	"tooltipCertRejected": {
+		"message": "Certificate is marked as rejected",
+		"description": "Tooltip shown when a certificate is rejected."
+	},
 	"tooltipDisabled": {
 		"message": "Disabled",
 		"description": "Tooltip shown when the add-on is temporarily disabled."
@@ -78,6 +82,14 @@
 	"settingsIgnoredDomainsTooltip": {
 		"message": "Enter one ignored domain per line\nUse * as a match-all wildcard for a domain part\nE.g.: *.example.com",
 		"description": "Tooltip explaining the ignore domain textarea"
+	},
+	"settingsLblBlockedDomains": {
+		"message": "Domains to block:",
+		"description": "Label for the textbox to insert domains to ignore."
+	},
+	"settingsBlockedDomainsTooltip": {
+		"message": "Enter one blocked domain per line\nUse * as a match-all wildcard for a domain part\nE.g.: *.example.com",
+		"description": "Tooltip explaining the blocked domain textarea"
 	},
 	"settingsLblCheckedFields": {
 		"message": "Fields to check:",
@@ -199,6 +211,26 @@
 			}
 		}
 	},
+	"popupRejectedCerts-single": {
+		"message": "$NUM$ rejected certificate",
+		"description": "The pop-up description for the displayed certificates that equal the stored version.",
+		"placeholders": {
+			"num": {
+				"content": "$1",
+				"example": "1"
+			}
+		}
+	},
+	"popupRejectedCerts-many": {
+		"message": "$NUM$ rejected certificates",
+		"description": "The pop-up description for the displayed certificates that equal the stored version.",
+		"placeholders": {
+			"num": {
+				"content": "$1",
+				"example": "5"
+			}
+		}
+	},
 	"popupSettings": {
 		"message": "Settings",
 		"description": "The link in the pop-up to the settings page."
@@ -299,6 +331,14 @@
 	},
 	"popupAddedChanged": {
 		"message": "Stored new certificate",
+		"description": "Label of the button after the new certificate was stored."
+	},
+	"popupRejectChanged": {
+		"message": "Reject this certificate",
+		"description": "Label of the button to store the new version of the certificate."
+	},
+	"popupRejectedChanged": {
+		"message": "Rejected certificate",
 		"description": "Label of the button after the new certificate was stored."
 	},
 	"popupStateEnabled": {

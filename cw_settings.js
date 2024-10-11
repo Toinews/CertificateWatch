@@ -28,6 +28,7 @@ const CW = bg.getCW();
 	const certChecks = document.getElementById("certChecks");
 	const logLevel = document.getElementById("logLevel");
 	const ignoredDomains = document.getElementById("ignoredDomains");
+	const blockedDomains = document.getElementById("blockedDomains");
 	const checkedFields = document.forms["checkedFields"].elements["checkedFields"];
 	const resetBtn = document.getElementById("reset");
 	const saveBtn = document.getElementById("save");
@@ -50,6 +51,7 @@ const CW = bg.getCW();
 		strictMode.checked = CW.getSetting("strictMode", true);
 		logLevel.value = CW.getSetting("logLevel", "none");
 		ignoredDomains.value = CW.getSetting("ignoredDomains", []).join("\n");
+		blockedDomains.value = CW.getSetting("blockedDomains", []).join("\n");
 
 		let fieldsSetting = CW.getSetting("checkedFields");
 		if (!fieldsSetting) {
@@ -71,6 +73,7 @@ const CW = bg.getCW();
 		CW.setSetting("userApprovalRequired", userApprovalRequired.checked);
 		CW.setSetting("strictMode", strictMode.checked);
 		CW.setSetting("ignoredDomains", ignoredDomains.value.split("\n"));
+		CW.setSetting("blockedDomains", blockedDomains.value.split("\n"));
 
 		if (certChecks.value === "domain") {
 			// "domain" checking requires the "tabs" permission, wich is optional
@@ -125,6 +128,7 @@ const CW = bg.getCW();
 	strictMode.addEventListener("change", modified);
 	logLevel.addEventListener("change", modified);
 	ignoredDomains.addEventListener("input", modified);
+	blockedDomains.addEventListener("input", modified);
 	for (const field of checkedFields) {
 		field.addEventListener("change", modified);
 	}

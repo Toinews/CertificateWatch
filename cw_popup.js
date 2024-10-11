@@ -27,6 +27,8 @@ const CW = bg.getCW();
 const changed = new Set();
 const tofu = new Set();
 const stored = new Set();
+const rejected = new Set();
+const blocked = new Set();
 const accepted = new Set(); // subset of changed that is accepted
 
 function showChangedValidity(validity, otherValidity, visualClass, parent) {
@@ -179,19 +181,47 @@ function addResult(result) {
 		}
 		li.appendChild(ul);
 
-		const button = document.createElement("input");
-		button.setAttribute("type", "button");
-		button.setAttribute("value", browser.i18n.getMessage("popupAddChanged"));
-		button.addEventListener("click", () => {
-			button.disabled = true;
+		const decision = document.createElement("table");
+		const r1 = document.createElement("tr");
+		const e11 = document.createElement("td");
+		const e12 = document.createElement("td");
+		
+		const buttonReject = document.createElement("input");
+		const buttonStore = document.createElement("input");
+
+		buttonStore.setAttribute("type", "buttonStore");
+		buttonStore.setAttribute("value", browser.i18n.getMessage("popupAddChanged"));
+		buttonStore.addEventListener("click", () => {
+			buttonStore.disabled = true;
+			buttonReject.disabled = true;
 			CW.logInfo("Storing new certificate for", result.host);
 
 			result.got.store(result.host);
 			result.accepted = true;
 
-			button.setAttribute("value", browser.i18n.getMessage("popupAddedChanged"));
+			buttonStore.setAttribute("value", browser.i18n.getMessage("popupAddedChanged"));
 		});
-		li.appendChild(button);
+
+		buttonReject.setAttribute("type", "buttonReject");
+		buttonReject.setAttribute("value", browser.i18n.getMessage("popupRejectChanged"));
+		buttonReject.addEventListener("click", () => {
+			buttonStore.disabled = true;
+			buttonReject.disabled = true;
+			CW.logInfo("Rejecting certificate for", result.host);
+
+			result.got.rejected = true;
+			result.got.store(result.host);
+			result.accepted = false;
+
+			buttonReject.setAttribute("value", browser.i18n.getMessage("popupRejectedChanged"));
+		});
+
+		e11.appendChild(buttonStore)
+		e12.appendChild(buttonReject)
+		r1.appendChild(e11);
+		r1.appendChild(e12);
+		decision.appendChild(r1);
+		li.appendChild(decision);
 	}
 
 	if (result.status === CW.CERT_TOFU) {
@@ -224,7 +254,12 @@ function addResult(result) {
 			changed.add(result.host);
 			insertToListWithDetails("changedList", result.host, result)
 		}
-	} else {
+	} else if (result.status === CW.CERT_REJECTED) {
+		if (!rejected.has(result.host)){
+			rejected.add(result.host)
+			insertToList("rejectedList", result.host);
+		}
+ 	} else {
 		CW.logDebug("Got result that has no known type", result);
 	}
 }
@@ -248,6 +283,7 @@ function updateCounts() {
 	update("numChanged", changed.size - accepted.size, "popupChangedCerts");
 	update("numTofu", tofu.size, "popupTofuCerts");
 	update("numStored", stored.size, "popupStoredCerts");
+	update("numRejected", rejected.size, "popupRejectedCerts");
 }
 
 function clearResults() {
@@ -321,6 +357,7 @@ async function init() {
 			changed.clear();
 			tofu.clear();
 			stored.clear();
+			rejected.clear();
 			accepted.clear();
 
 			clearResults();

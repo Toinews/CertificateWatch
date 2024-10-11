@@ -145,7 +145,8 @@ CW.CertStatus = class {
 	}
 };
 
-CW.CERT_ERROR = new CW.CertStatus(browser.i18n.getMessage("tooltipCertError"), 4, "icons/cw_16_error.png");
+CW.CERT_ERROR = new CW.CertStatus(browser.i18n.getMessage("tooltipCertError"), 5, "icons/cw_16_error.png");
+CW.CERT_REJECTED = new CW.CertStatus(browser.i18n.getMessage("tooltipCertRejected"), 4, "icons/cw_16_error.png");
 CW.CERT_CHANGED = new CW.CertStatus(browser.i18n.getMessage("tooltipCertChanged"), 3, "icons/cw_16_changed.png");
 CW.CERT_TOFU = new CW.CertStatus(browser.i18n.getMessage("tooltipCertTofu"), 2, "icons/cw_16_tofu.png");
 CW.CERT_STORED = new CW.CertStatus(browser.i18n.getMessage("tooltipCertStored"), 1, "icons/cw_16_stored.png");

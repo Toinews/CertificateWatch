@@ -21,9 +21,9 @@
  * Background script that intercepts and checks all TLS connections.
  */
 
-function isIgnoredDomain(host, ignoredDomains) {
+function isDomainInList(host, domainsList) {
 	const hostParts = host.split(".");
-	for (let filter of ignoredDomains) {
+	for (let filter of domainsList) {
 		filter = filter.trim();
 		if (filter.length > 0) {
 			const filterParts = filter.split(".");
@@ -81,6 +81,11 @@ function analyzeCert(host, securityInfo, result) {
 			result.changes["fingerprint"] = {stored: "0", got: cert["fingerprint"]}
 		}
 	} else {
+		if (storedCert.rejected === true) 
+		{
+			result.status = CW.CERT_REJECTED;
+			return;
+		}
 		const changes = {};
 		const checkedFields = CW.getSetting("checkedFields",
 				["subject", "issuer", "validity", "subjectPublicKeyInfoDigest", "serialNumber", "fingerprint"]);
@@ -163,7 +168,13 @@ async function checkConnection(url, securityInfo, tabId, cancel) {
 		}
 
 		const ignoredDomains = CW.getSetting("ignoredDomains", []);
-		if (isIgnoredDomain(host, ignoredDomains)) {
+		const blockedDomains = CW.getSetting("blockedDomains", []);
+		if (isDomainInList(host, ignoredDomains)) {
+			return;
+		}
+		if (isDomainInList(host, blockedDomains)) {
+			cancel.flag = true;
+			cancel.silent = true;
 			return;
 		}
 
@@ -182,6 +193,10 @@ async function checkConnection(url, securityInfo, tabId, cancel) {
 			const tab = CW.getTab(tabId);
 			tab.addResult(result);
 			CW.updateTabIcon(tabId);
+			if (result.status === CW.CERT_REJECTED) {
+				cancel.flag = true;
+				cancel.silent = true;
+			}
 		}
 	} catch (e) {
 		CW.logDebug("Error during connection checking", e);
@@ -207,12 +222,14 @@ async function onHeadersReceived(details) {
 	// only query securityInfo and then quickly return
 	// checkConnection() is executed async
 	// this makes blocking the request as short as possible
-	let cancel = {flag: false}
+	let cancel = {flag: false, silent: false};
 
 	const securityInfo = await browser.webRequest.getSecurityInfo(details.requestId, {});
 	await checkConnection(details.url, securityInfo, details.tabId, cancel);
 	if (cancel.flag === true) {
-		sendNotificationBlocked();
+		if (!cancel.silent) {
+			sendNotificationBlocked();
+		}
 		return {'cancel': true};
 	}
 	return;
