@@ -35,9 +35,7 @@ function isDomainInList(host, domainsList) {
 						break;
 					}
 				}
-
 				if (match) {
-					CW.logDebug("Ignoring domain", host, "because it matches", filter);
 					return true;
 				}
 			}
@@ -49,6 +47,8 @@ function isDomainInList(host, domainsList) {
 
 function analyzeCert(host, securityInfo, result) {
 	const strictMode = CW.getSetting("strictMode", true);
+	const criticalDomains = CW.getSetting("criticalDomains", []);
+
 	if (!securityInfo.certificates || securityInfo.certificates.length !== 1) {
 		result.status = CW.CERT_ERROR;
 		return;
@@ -58,8 +58,8 @@ function analyzeCert(host, securityInfo, result) {
 	const storedCert = CW.Certificate.fromStorage(host);
 
 	if (!storedCert) {
-			result.status = CW.CERT_TOFU;
-		if (!strictMode) {
+		result.status = CW.CERT_TOFU;
+		if (!strictMode && !isDomainInList(host, criticalDomains)) {
 			cert.store(host);
 		} else {
 			result.got = cert;
@@ -169,12 +169,13 @@ async function checkConnection(url, securityInfo, tabId, cancel) {
 
 		const ignoredDomains = CW.getSetting("ignoredDomains", []);
 		const blockedDomains = CW.getSetting("blockedDomains", []);
-		if (isDomainInList(host, ignoredDomains)) {
-			return;
-		}
+		const criticalDomains = CW.getSetting("criticalDomains", []);
 		if (isDomainInList(host, blockedDomains)) {
 			cancel.flag = true;
 			cancel.silent = true;
+			return;
+		}
+		if (isDomainInList(host, ignoredDomains)) {
 			return;
 		}
 
@@ -184,10 +185,14 @@ async function checkConnection(url, securityInfo, tabId, cancel) {
 			const userApprovalRequired = CW.getSetting("userApprovalRequired", true)
 			await analyzeCert(host, securityInfo, result);
 
-			if ((strictMode && result.status === CW.CERT_TOFU) || (result.status === CW.CERT_CHANGED && userApprovalRequired)) {
+			if ((strictMode && result.status === CW.CERT_TOFU)
+				|| (result.status === CW.CERT_CHANGED && userApprovalRequired)) {
 				cancel.flag = true;
 			}
-
+			if ((isDomainInList(host, criticalDomains) && ((result.status === CW.CERT_CHANGED) || (result.status === CW.CERT_TOFU)))) {
+				cancel.flag = true;
+				result.critical = true;
+			}
 			CW.logDebug(host, result.status.text);
 
 			const tab = CW.getTab(tabId);

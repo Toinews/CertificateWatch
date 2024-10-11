@@ -26,7 +26,7 @@
 			body {
 				overflow: hidden;
 			}
-			#ignoredDomains {
+			#ignoredDomains, #criticalDomains, #blockedDomains {
 				box-sizing: border-box;
 				min-width: 100%;
 				max-width: 100%;
@@ -79,6 +79,15 @@
 					</td>
 					<td>
 						<textarea id="blockedDomains" rows="15" data-i18n="placeholder=settingsBlockedDomainsTooltip"></textarea>
+					</td>
+				</tr>
+
+				<tr data-i18n="title=settingsCriticalDomainsTooltip">
+					<td class="key">
+						<label for="criticalDomains" data-i18n="settingsLblCriticalDomains"></label>
+					</td>
+					<td>
+						<textarea id="criticalDomains" rows="15" data-i18n="placeholder=settingsCriticalDomainsTooltip"></textarea>
 					</td>
 				</tr>
 

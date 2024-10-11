@@ -91,6 +91,14 @@
 		"message": "Enter one blocked domain per line\nUse * as a match-all wildcard for a domain part\nE.g.: *.example.com",
 		"description": "Tooltip explaining the blocked domain textarea"
 	},
+	"settingsLblCriticalDomains": {
+		"message": "Critical domains:",
+		"description": "Label for the textbox to insert domains to ignore."
+	},
+	"settingsCriticalDomainsTooltip": {
+		"message": "Enter one critical domain per line\nUse * as a match-all wildcard for a domain part\nE.g.: *.example.com\n These domains certificates, if changed or new, will block the connection regardless of the strict mode option.",
+		"description": "Tooltip explaining the blocked domain textarea"
+	},
 	"settingsLblCheckedFields": {
 		"message": "Fields to check:",
 		"description": "Label for the list of fields that will be checked for modifications."

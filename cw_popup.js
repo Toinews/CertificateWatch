@@ -228,7 +228,7 @@ function addResult(result) {
 		if (!tofu.has(result.host)) {
 			const strictMode = CW.getSetting("strictMode", true)
 			tofu.add(result.host);
-			if (strictMode) {
+			if (strictMode || result.critical) {
 				insertToListWithDetails("tofuList", result.host, result);
 			} else {
 				insertToList("tofuList", result.host);
