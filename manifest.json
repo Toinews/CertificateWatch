@@ -45,7 +45,8 @@
 		"webRequest",
 		"webRequestBlocking",
 		"storage",
-		"unlimitedStorage"
+		"unlimitedStorage",
+		"notifications"
 	],
 
 	"optional_permissions": [

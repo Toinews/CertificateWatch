@@ -109,10 +109,100 @@ function addResult(result) {
 		list.appendChild(li);
 	}
 
+	function insertToListWithDetails(listID, host, result) {
+		const list = document.getElementById(listID);
+		const li = document.createElement("li");
+		li.appendChild(createHostLink(result.host));
+		list.appendChild(li);
+
+		const ul = document.createElement("ul");
+		for (const field of Object.keys(result.changes)) {
+			const nestedLi = document.createElement("li");
+			const b = document.createElement("b");
+			if (field === "subject") {
+				b.textContent = browser.i18n.getMessage("popupChangedFieldSubject");
+			} else if (field === "issuer") {
+				b.textContent = browser.i18n.getMessage("popupChangedFieldIssuer");
+			} else if (field === "validity") {
+				b.textContent = browser.i18n.getMessage("popupChangedFieldValidity");
+			} else if (field === "subjectPublicKeyInfoDigest") {
+				b.textContent = browser.i18n.getMessage("popupChangedFieldPublicKey");
+			} else if (field === "fingerprint") {
+				b.textContent = browser.i18n.getMessage("popupChangedFieldFingerprint");
+			} else if (field === "serialNumber") {
+				b.textContent = browser.i18n.getMessage("popupChangedFieldSerialNumber");
+			} else {
+				b.textContent = field;
+			}
+			nestedLi.appendChild(b);
+			addMessageNested(nestedLi, "popupChanged", b);
+
+			if (field === "subject" || field === "issuer" || field === "validity") {
+
+				const table = document.createElement("table");
+				const r1 = document.createElement("tr");
+				const r2 = document.createElement("tr");
+				const e11 = document.createElement("th");
+				const e12 = document.createElement("td");
+				const e21 = document.createElement("th");
+				const e22 = document.createElement("td");
+
+				e11.setAttribute("scope", "row");
+				e21.setAttribute("scope", "row");
+				e11.style["font-weight"] = "inherit";
+				e21.style["font-weight"] = "inherit";
+
+				e11.textContent = browser.i18n.getMessage("popupChangedStored");
+				if (field === "validity") {
+					showChangedValidity(result.changes[field].stored, result.changes[field].got, "diffOld", e12);
+				} else {
+					showChangedSubject(result.changes[field].stored, result.changes[field].got, "diffOld", e12);
+				}
+
+				e21.textContent = browser.i18n.getMessage("popupChangedNew");
+				if (field === "validity") {
+					showChangedValidity(result.changes[field].got, result.changes[field].stored, "diffNew", e22);
+				} else {
+					showChangedSubject(result.changes[field].got, result.changes[field].stored, "diffNew", e22);
+				}
+
+				r1.appendChild(e11);
+				r1.appendChild(e12);
+				r2.appendChild(e21);
+				r2.appendChild(e22);
+				table.appendChild(r1);
+				table.appendChild(r2);
+				nestedLi.appendChild(table);
+			}
+
+			ul.appendChild(nestedLi);
+		}
+		li.appendChild(ul);
+
+		const button = document.createElement("input");
+		button.setAttribute("type", "button");
+		button.setAttribute("value", browser.i18n.getMessage("popupAddChanged"));
+		button.addEventListener("click", () => {
+			button.disabled = true;
+			CW.logInfo("Storing new certificate for", result.host);
+
+			result.got.store(result.host);
+			result.accepted = true;
+
+			button.setAttribute("value", browser.i18n.getMessage("popupAddedChanged"));
+		});
+		li.appendChild(button);
+	}
+
 	if (result.status === CW.CERT_TOFU) {
 		if (!tofu.has(result.host)) {
+			const strictMode = CW.getSetting("strictMode", true)
 			tofu.add(result.host);
-			insertToList("tofuList", result.host);
+			if (strictMode) {
+				insertToListWithDetails("tofuList", result.host, result);
+			} else {
+				insertToList("tofuList", result.host);
+			}
 		}
 	} else if (result.status === CW.CERT_STORED) {
 		// there may be the case that a TOFU certificate was re-used in a later connection
@@ -132,89 +222,7 @@ function addResult(result) {
 
 		} else if (!changed.has(result.host)) {
 			changed.add(result.host);
-
-			const list = document.getElementById("changedList");
-			const li = document.createElement("li");
-			li.appendChild(createHostLink(result.host));
-			list.appendChild(li);
-
-			const ul = document.createElement("ul");
-			for (const field of Object.keys(result.changes)) {
-				const nestedLi = document.createElement("li");
-				const b = document.createElement("b");
-				if (field === "subject") {
-					b.textContent = browser.i18n.getMessage("popupChangedFieldSubject");
-				} else if (field === "issuer") {
-					b.textContent = browser.i18n.getMessage("popupChangedFieldIssuer");
-				} else if (field === "validity") {
-					b.textContent = browser.i18n.getMessage("popupChangedFieldValidity");
-				} else if (field === "subjectPublicKeyInfoDigest") {
-					b.textContent = browser.i18n.getMessage("popupChangedFieldPublicKey");
-				} else if (field === "fingerprint") {
-					b.textContent = browser.i18n.getMessage("popupChangedFieldFingerprint");
-				} else if (field === "serialNumber") {
-					b.textContent = browser.i18n.getMessage("popupChangedFieldSerialNumber");
-				} else {
-					b.textContent = field;
-				}
-				nestedLi.appendChild(b);
-				addMessageNested(nestedLi, "popupChanged", b);
-
-				if (field === "subject" || field === "issuer" || field === "validity") {
-
-					const table = document.createElement("table");
-					const r1 = document.createElement("tr");
-					const r2 = document.createElement("tr");
-					const e11 = document.createElement("th");
-					const e12 = document.createElement("td");
-					const e21 = document.createElement("th");
-					const e22 = document.createElement("td");
-
-					e11.setAttribute("scope", "row");
-					e21.setAttribute("scope", "row");
-					e11.style["font-weight"] = "inherit";
-					e21.style["font-weight"] = "inherit";
-
-					e11.textContent = browser.i18n.getMessage("popupChangedStored");
-					if (field === "validity") {
-						showChangedValidity(result.changes[field].stored, result.changes[field].got, "diffOld", e12);
-					} else {
-						showChangedSubject(result.changes[field].stored, result.changes[field].got, "diffOld", e12);
-					}
-
-					e21.textContent = browser.i18n.getMessage("popupChangedNew");
-					if (field === "validity") {
-						showChangedValidity(result.changes[field].got, result.changes[field].stored, "diffNew", e22);
-					} else {
-						showChangedSubject(result.changes[field].got, result.changes[field].stored, "diffNew", e22);
-					}
-
-					r1.appendChild(e11);
-					r1.appendChild(e12);
-					r2.appendChild(e21);
-					r2.appendChild(e22);
-					table.appendChild(r1);
-					table.appendChild(r2);
-					nestedLi.appendChild(table);
-				}
-
-				ul.appendChild(nestedLi);
-			}
-			li.appendChild(ul);
-
-			const button = document.createElement("input");
-			button.setAttribute("type", "button");
-			button.setAttribute("value", browser.i18n.getMessage("popupAddChanged"));
-			button.addEventListener("click", () => {
-				button.disabled = true;
-				CW.logInfo("Storing new certificate for", result.host);
-
-				result.got.store(result.host);
-				result.accepted = true;
-
-				button.setAttribute("value", browser.i18n.getMessage("popupAddedChanged"));
-			});
-			li.appendChild(button);
+			insertToListWithDetails("changedList", result.host, result)
 		}
 	} else {
 		CW.logDebug("Got result that has no known type", result);

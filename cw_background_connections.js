@@ -58,11 +58,10 @@ function analyzeCert(host, securityInfo, result) {
 	const storedCert = CW.Certificate.fromStorage(host);
 
 	if (!storedCert) {
-		if (!strictMode) {
 			result.status = CW.CERT_TOFU;
+		if (!strictMode) {
 			cert.store(host);
 		} else {
-			result.status = CW.CERT_NEW;
 			result.got = cert;
 			result.accepted = false;
 			result.changes = {};
@@ -174,11 +173,7 @@ async function checkConnection(url, securityInfo, tabId, cancel) {
 			const userApprovalRequired = CW.getSetting("userApprovalRequired", true)
 			await analyzeCert(host, securityInfo, result);
 
-			if (strictMode && result.status === CW.CERT_NEW) {
-				result.status = CW.CERT_CHANGED;
-			}
-
-			if (result.status === CW.CERT_CHANGED && userApprovalRequired) {
+			if ((strictMode && result.status === CW.CERT_TOFU) || (result.status === CW.CERT_CHANGED && userApprovalRequired)) {
 				cancel.flag = true;
 			}
 
@@ -199,6 +194,15 @@ async function checkConnection(url, securityInfo, tabId, cancel) {
 	return;
 }
 
+function sendNotificationBlocked() {
+	browser.notifications.create({
+		"type": "basic",
+		"iconUrl": browser.runtime.getURL("icons/cw_16_changed.png"),
+		"title": "Loading blocked",
+		"message": "Certificates have been changed or strict mode is enabled. Please check extension."
+	});
+}
+
 async function onHeadersReceived(details) {
 	// only query securityInfo and then quickly return
 	// checkConnection() is executed async
@@ -208,6 +212,7 @@ async function onHeadersReceived(details) {
 	const securityInfo = await browser.webRequest.getSecurityInfo(details.requestId, {});
 	await checkConnection(details.url, securityInfo, details.tabId, cancel);
 	if (cancel.flag === true) {
+		sendNotificationBlocked();
 		return {'cancel': true};
 	}
 	return;
@@ -222,17 +227,3 @@ browser.webRequest.onHeadersReceived.addListener(
 	// we have to set the option "blocking" for browser.webRequest.getSecurityInfo
 	["blocking"]
 );
-
-/*
- * create a listener that changes the "certChecks" setting if the "tabs"
- * optional permission is removed.
- * TODO: not yet implemented in firefox
- */
-/*browser.permissions.onRemoved.addListener((removed) => {
-	if (removed.permissions && removed.permissions.includes("tabs")) {
-		if (CW.getSetting("certChecks") === "domain") {
-			CW.logInfo("Optional \"tabs\" permission got removed; reverting to checking all domains");
-			CW.setSetting("certChecks", "all");
-		}
-	}
-});*/
